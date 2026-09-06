@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Latency-First Network Build</title>
+<meta name="description" content="Network design presentation for buildings, offices, homes, remote sites and small ISPs: UnCGNAT, 802.1Q VLAN segmentation, FQ-CoDel SQM, and why dual-WAN load balancing breaks things.">
+<link rel="icon" href="assets/network-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="deck.css?v=4">
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="bg-wash"></div>
+<div class="progress" id="prog"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="assets/network-icon.png" alt="">
+    <div>Network Build<small>UnCGNAT · VLAN · FQ-CoDel</small></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="deckswitch" title="Switch between the two hardware tiers">
+    <button class="btn" data-deckbtn="full">Full set</button>
+    <button class="btn" data-deckbtn="budget">Budget set</button>
+  </div>
+  <span class="counter" id="counter"><b>01</b> / 28</span>
+  <button class="btn" id="flowBtn" title="Cycle traffic-flow animation (L)">
+    <svg viewBox="0 0 24 24"><path d="M4 8h13M13 4l4 4-4 4M20 16H7M11 12l-4 4 4 4"/></svg><span id="flowLabel">Flow: both</span>
+  </button>
+  <button class="btn" id="notesBtn" title="Toggle speaker notes (N)">
+    <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg><span>Notes</span>
+  </button>
+  <button class="btn" id="themeBtn" title="Toggle light / dark (T)">
+    <img class="icn tint" id="themeIcon" src="assets/sun.png" alt=""><span id="themeLabel">Light</span>
+  </button>
+  <button class="btn" id="fsBtn" title="Fullscreen (F)">
+    <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Present</span>
+  </button>
+</header>
+
+<nav class="rail" id="rail"></nav>
+
+<div class="navarrows">
+  <button class="btn" id="prevBtn"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="btn" id="nextBtn"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+</div>
+<div class="hint">← → navigate · T theme · L flow · N notes · F present · P print</div>
+
+<main class="deck" id="deck">
+
+<!-- ═══════════ COVER — FULL SET ═══════════ -->
+<section class="slide" data-deck="full" data-title="Cover">
+  <div class="wrap" style="display:grid;grid-template-columns:1.25fr .75fr;gap:40px;align-items:center;min-height:calc(100vh - 150px)">
+    <div>
+      <span class="eyebrow"><img class="icn tint" style="width:13px;height:13px" src="assets/star.png" alt="">Full Set · pfSense + JetStream</span>
+      <h1>A network built for <span class="grad">latency</span>, not just speed.</h1>
+      <p class="sub">For buildings, offices, homes, remote/mountain sites and small ISPs. Built on <b style="color:var(--text)">UnCGNAT</b>, <b style="color:var(--text)">802.1Q VLAN segmentation</b> and <b style="color:var(--text)">FQ-CoDel SQM</b> — the three things that separate a network that “has internet” from one that <i>feels</i> fast while everyone is on it.</p>
+      <div class="cover-badges">
+        <span class="pill acc">Public IP · UnCGNAT</span>
+        <span class="pill acc">802.1Q VLANs · L2 isolation</span>
+        <span class="pill acc">FQ-CoDel · A+ bufferbloat</span>
+        <span class="pill acc">One clean WAN</span>
+        <span class="pill acc">Remote managed 24/7</span>
+      </div>
+      <p class="sub" style="margin-top:26px;font-size:12.6px;color:var(--dim)">← → to move · <b style="color:var(--muted)">F</b> fullscreen · <b style="color:var(--muted)">L</b> traffic-flow animation · switch tier in the top bar</p>
+    </div>
+    <div class="cover-art">
+      <div class="orbit">
+        <div class="ring"><div class="dot"></div></div>
+        <div class="ring"><div class="dot"></div></div>
+        <div class="ring"><div class="dot"></div></div>
+        <img class="core" src="assets/network-icon.png" alt="">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ COVER — BUDGET SET ═══════════ -->
+<section class="slide" data-deck="budget" data-title="Cover">
+  <div class="wrap" style="display:grid;grid-template-columns:1.25fr .75fr;gap:40px;align-items:center;min-height:calc(100vh - 150px)">
+    <div>
+      <span class="eyebrow"><img class="icn tint" style="width:13px;height:13px" src="assets/star.png" alt="">Budget Set · One-box build</span>
+      <h1>The same architecture for <span class="grad">₱5,000</span>.</h1>
+      <p class="sub">No rack, no managed switch. One <b style="color:var(--text)">GL-AX1800</b> doing <b style="color:var(--text)">UnCGNAT</b>, <b style="color:var(--text)">VLAN segmentation</b>, <b style="color:var(--text)">STP</b> and <b style="color:var(--text)">FQ-CoDel SQM</b> — remotely managed through GoodCloud. Running live today, not a proposal.</p>
+      <div class="cover-badges">
+        <span class="pill acc">₱5,000 total</span>
+        <span class="pill acc">4 VLANs on 4 ports</span>
+        <span class="pill acc">FQ-CoDel SQM</span>
+        <span class="pill acc">STP enabled</span>
+        <span class="pill acc">GoodCloud remote</span>
+      </div>
+      <p class="sub" style="margin-top:26px;font-size:12.6px;color:var(--dim)">← → to move · <b style="color:var(--muted)">F</b> fullscreen · <b style="color:var(--muted)">L</b> traffic-flow animation · switch tier in the top bar</p>
+    </div>
+    <div class="cover-art">
+      <div class="orbit">
+        <div class="ring"><div class="dot"></div></div>
+        <div class="ring"><div class="dot"></div></div>
+        <div class="ring"><div class="dot"></div></div>
+        <img class="core" src="assets/network-icon.png" alt="">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ AGENDA ═══════════ -->
+<section class="slide" data-title="Agenda">
+  <div class="wrap">
+    <span class="eyebrow">Agenda</span>
+    <h2>What we will walk through</h2>
+    <p class="sub">Every section answers one question: <i>what does this component do, and what breaks the day it is missing?</i></p>
+    <div class="grid g3">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/layer-up.png" alt=""><h3>01 · The Build</h3></div>
+        <ul class="clean"><li>Where this applies</li><li>Hardware roles and prices</li><li>Live topologies + IP plans</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/encrypted.png" alt=""><h3>02 · UnCGNAT</h3></div>
+        <ul class="clean"><li>What CGNAT actually is</li><li>With vs without — side by side</li><li>What stops working under it</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/defence.png" alt=""><h3>03 · VLAN</h3></div>
+        <ul class="clean"><li>Managed switch vs flat network</li><li>Broadcast domains &amp; isolation</li><li>Loop protection with STP</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/stopwatch.png" alt=""><h3>04 · FQ-CoDel</h3></div>
+        <ul class="clean"><li>Bufferbloat, explained simply</li><li><b>Live traffic simulator</b></li><li>Where the queue forms</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>05 · Dual WAN</h3></div>
+        <ul class="clean"><li><b>Why 2 ISPs made things worse</b></li><li>The speed-test illusion</li><li>What to do instead</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/crown.png" alt=""><h3>06 · Money &amp; Value</h3></div>
+        <ul class="clean"><li>PHP cost of each tier</li><li>Which tier fits which site</li><li>How to verify every claim</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ WHERE THIS APPLIES ═══════════ -->
+<section class="slide" data-title="Where this applies">
+  <div class="wrap">
+    <span class="eyebrow">Scope</span>
+    <h2>Where this design applies</h2>
+    <p class="sub">The pillars are not a piso Wi-Fi trick. They are what any network needs once more than one person depends on it.</p>
+    <div class="grid g4">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/layer-up.png" alt=""><h3>Office / building</h3></div>
+        <ul class="clean"><li>Tenants and departments on separate VLANs</li><li>Guest Wi-Fi that cannot see the office LAN</li><li>POS, CCTV and VoIP protected from downloads</li><li>Remote access to the NVR without a relay cloud</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/lightning.png" alt=""><h3>Home / family</h3></div>
+        <ul class="clean"><li>Work calls survive someone else’s download</li><li>Gaming ping stays flat at peak hours</li><li>Smart devices on their own segment</li><li>Open NAT for consoles and party chat</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/defence.png" alt=""><h3>Remote / mountain ops</h3></div>
+        <ul class="clean"><li>Long point-to-point wireless links</li><li>Site visits are expensive — remote management is the whole point</li><li>UnCGNAT is what makes a remote console possible</li><li>One VLAN down beats the whole site down</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/badge.png" alt=""><h3>Small ISP / piso Wi-Fi</h3></div>
+        <ul class="clean"><li>Per-group isolation, policy and accounting</li><li>Fair sharing so one downloader can’t starve the rest</li><li>Vendo dashboards reachable remotely</li><li>Fewer refunds and lag complaints</li></ul></div>
+    </div>
+    <div class="note"><b>Two live reference sites</b> back this deck — Site 1 and Site 2, both in production today. The hardware differs between them; the architecture does not.</div>
+  </div>
+</section>
+
+<!-- ═══════════ HARDWARE + PRICE (FULL) ═══════════ -->
+<section class="slide" data-deck="full" data-title="Hardware &amp; price">
+  <div class="wrap">
+    <span class="eyebrow">The Build</span>
+    <h2>What each box is for</h2>
+    <p class="sub">Every device has exactly one job. That is the whole design philosophy — no single unit doing routing, switching, shaping and Wi-Fi badly at the same time.</p>
+    <div class="card" style="padding:6px 10px">
+      <table>
+        <thead><tr><th>Layer</th><th>Device</th><th>Role in this network</th><th class="num">Price (PHP)</th></tr></thead>
+        <tbody>
+          <tr><td><b>Service</b></td><td>PLDT Fibr — Plan 1899</td><td>600 Mbps fiber, UnCGNAT requested + bridge mode</td><td class="num"><span class="price mo">₱1,899 / mo</span></td></tr>
+          <tr><td><b>Edge router</b></td><td>pfSense box</td><td>NAT, firewall, DHCP, inter-VLAN routing, <b>FQ-CoDel SQM</b></td><td class="num"><span class="price">₱10,000</span></td></tr>
+          <tr><td><b>Core switch</b></td><td>TP-Link JetStream <b>T1500G-10PS</b> (TL-SG2210P)</td><td>8× gigabit + 2× SFP · 802.1Q tagging, per-port VLAN, STP, 802.3af PoE</td><td class="num"><span class="price">₱11,000</span></td></tr>
+          <tr><td><b>Wi-Fi</b></td><td>Separate access point</td><td>pfSense has no radio of its own — and bridge mode switches the PLDT box’s Wi-Fi off</td><td class="num" style="color:var(--dim)">not costed — varies</td></tr>
+          <tr><td><b>Backhaul</b></td><td>Wireless P2P bridge — AP + Station</td><td>Carries one VLAN across a span with no cable path</td><td class="num" style="color:var(--dim)">not costed — varies</td></tr>
+          <tr><td><b>Endpoints</b></td><td>Client devices, APs, vendos, CCTV</td><td>Whatever the site actually runs</td><td class="num" style="color:var(--dim)">not costed — varies</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>PoE — Power over Ethernet — and the catch.</b> PoE means one Ethernet cable carries both the data <i>and</i> the power, so a camera or access point needs no separate adapter at the far end. The T1500G-10PS supplies <b>802.3af PoE on all 8 ports, 61 W total</b>. It does <i>not</i> power the LiteBeam AC Gen2 radios: those use <b>24 V passive PoE</b>, not 802.3af, so they keep their own injectors. Worth knowing before anyone plans a build around it.</div>
+    <div class="note"><b>Only the brain is priced.</b> Wireless bridges, access points, client gear, cabling, masts, PoE and labour are site-specific — the reference sites happen to use Ubiquiti LiteBeam AC Gen2 for the P2P hops, but any AP/Station pair works. What this deck costs is the <i>architecture</i>: the routing and switching tier that makes UnCGNAT, VLANs and FQ-CoDel possible at all.</div>
+    <div class="speaker"><b>Speaker note</b>Don’t defend the prices yet. Just plant them. The cost slides near the end compare ₱5,000 against ₱21,000, and the answer is “it depends on the site”, not “buy the expensive one”.</div>
+  </div>
+</section>
+
+<!-- ═══════════ HARDWARE + PRICE (BUDGET) ═══════════ -->
+<section class="slide" data-deck="budget" data-title="Hardware &amp; price">
+  <div class="wrap">
+    <span class="eyebrow">The Build</span>
+    <h2>What each box is for</h2>
+    <p class="sub">One box does the routing, the VLAN switching, the shaping <i>and</i> the Wi-Fi — deliberately, because at this size a second chassis buys headroom nobody at the site will use.</p>
+    <div class="card" style="padding:6px 10px">
+      <table>
+        <thead><tr><th>Layer</th><th>Device</th><th>Role in this network</th><th class="num">Price (PHP)</th></tr></thead>
+        <tbody>
+          <tr><td><b>Service</b></td><td>PLDT Fibr — Plan 1899</td><td>600 Mbps fiber, UnCGNAT done — CPE stays in router mode (owner’s call)</td><td class="num"><span class="price mo">₱1,899 / mo</span></td></tr>
+          <tr><td><b>All-in-one</b></td><td>GL.iNet <b>GL-AX1800</b></td><td>Router + VLAN switch + SQM + STP + <b>its own dual-band Wi-Fi</b>, one box</td><td class="num"><span class="price">₱5,000</span></td></tr>
+          <tr><td><b>Backhaul</b></td><td>Wireless P2P bridge — AP + Station</td><td>Carries one VLAN across a span with no cable path</td><td class="num" style="color:var(--dim)">not costed — varies</td></tr>
+          <tr><td><b>Endpoints</b></td><td>Client devices, APs, vendos, CCTV</td><td>Whatever the site actually runs</td><td class="num" style="color:var(--dim)">not costed — varies</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Why the built-in Wi-Fi matters.</b> Bridge mode turns the PLDT box into a plain modem — its own Wi-Fi has to be switched off, and the single public IP lands on your router instead. A router with no radio therefore leaves the site with no wireless until you buy an access point. The GL-AX1800 already has one, so the site keeps Wi-Fi on day one and the box can be administered over that Wi-Fi.</div>
+    <div class="note"><b>Only the brain is priced.</b> Wireless bridges, client gear, cabling, masts, PoE and labour are site-specific — the reference sites happen to use Ubiquiti LiteBeam AC Gen2 for the P2P hops, but any AP/Station pair works. What this deck costs is the <i>architecture</i>: the routing and switching tier that makes UnCGNAT, VLANs and FQ-CoDel possible at all.</div>
+    <div class="speaker"><b>Speaker note</b>Don’t defend the price yet. Just plant it. The cost slides near the end put ₱5,000 next to ₱21,000, and the honest answer is “it depends on the site”.</div>
+  </div>
+</section>
+
+<!-- ═══════════ SITE 1 TOPOLOGY (FULL) ═══════════ -->
+<section class="slide" data-deck="full" data-title="Site 1 — topology">
+  <div class="wrap">
+    <span class="eyebrow">Site 1 · Full Set</span>
+    <h2>Production topology — pfSense + JetStream</h2>
+    <p class="sub">Fiber → UnCGNAT bridge → pfSense → JetStream managed switch → five tagged VLANs → five independent point-to-point links.</p>
+    <div class="card"><div class="diagram" data-diagram="siteA"></div>
+      <div class="flowkey">
+        <span class="dn"><i></i>Downlink — ISP → client (traffic coming down)</span>
+        <span class="up"><i></i>Uplink — client → ISP (requests going up)</span>
+        <span style="color:var(--dim)">Press <b>L</b> to show down only / up only / off</span>
+      </div>
+    </div>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card tight"><div class="kpi acc">1</div><div class="lbl">Public IP · no CGNAT</div></div>
+      <div class="card tight"><div class="kpi acc">5</div><div class="lbl">Isolated VLANs</div></div>
+      <div class="card tight"><div class="kpi acc">5</div><div class="lbl">P2P wireless links</div></div>
+      <div class="card tight"><div class="kpi good">1</div><div class="lbl">Shaped queue (FQ-CoDel)</div></div>
+    </div>
+    <div class="note"><b>The switch:</b> TP-Link JetStream <b>T1500G-10PS</b> (TL-SG2210P) — 8 gigabit ports plus 2 SFP slots. Six ports are in use: one trunk from pfSense and five VLANs out. Two copper ports and both fibre slots are spare, which is what “room to grow” means in practice.</div>
+    <div class="note"><b>One cable, five networks.</b> pfSense connects to the JetStream with a single <i>tagged trunk</i> — every VLAN rides that one cable, labelled. The switch strips the label and drops each VLAN onto its own port. pfSense is the gateway for all five and is the only thing allowed to route between them.</div>
+    <div class="speaker"><b>Speaker note</b>Walk it top-down and stop at pfSense: “everything above this line is the ISP’s problem, everything below is under my control — and that control is the product.” Then point at the moving dashes: blue is what comes down, orange is what goes up.</div>
+  </div>
+</section>
+
+<!-- ═══════════ SITE 1 IP PLAN (FULL) ═══════════ -->
+<section class="slide" data-deck="full" data-title="Site 1 — IP plan">
+  <div class="wrap">
+    <span class="eyebrow">Site 1 · Addressing</span>
+    <h2>IP addressing plan</h2>
+    <p class="sub"><b style="color:var(--text)">The VLAN ID is the third octet.</b> VLAN 20 lives on 192.168.20.0/24, VLAN 30 on 192.168.30.0/24, and so on — read the address, know the segment. 154 DHCP leases per group, gateway always <code>.1</code>, <code>.2–.99</code> held back for anything that must keep its address.</p>
+    <div class="card" style="padding:6px 10px">
+      <table>
+        <thead><tr><th>Switch port</th><th>VLAN</th><th>Gateway</th><th>DHCP pool</th><th>Static reserve</th><th>Serves</th></tr></thead>
+        <tbody>
+          <tr><td><b>Port 1</b></td><td><span class="tag">VLAN 110</span></td><td><span class="ip">192.168.110.1</span></td><td class="mono">.100 – .254</td><td class="mono">.2 – .99</td><td>P2P link 1 → group A</td></tr>
+          <tr><td><b>Port 2</b></td><td><span class="tag">VLAN 20</span></td><td><span class="ip">192.168.20.1</span></td><td class="mono">.100 – .254</td><td class="mono">.2 – .99</td><td>P2P link 2 → group B</td></tr>
+          <tr><td><b>Port 3</b></td><td><span class="tag">VLAN 30</span></td><td><span class="ip">192.168.30.1</span></td><td class="mono">.100 – .254</td><td class="mono">.2 – .99</td><td>P2P link 3 → group C</td></tr>
+          <tr><td><b>Port 4</b></td><td><span class="tag">VLAN 40</span></td><td><span class="ip">192.168.40.1</span></td><td class="mono">.100 – .254</td><td class="mono">.2 – .99</td><td>P2P link 4 → group D</td></tr>
+          <tr><td><b>Port 5</b></td><td><span class="tag">VLAN 50</span></td><td><span class="ip">192.168.50.1</span></td><td class="mono">.100 – .254</td><td class="mono">.2 – .99</td><td>P2P link 5 → 34-port fan-out</td></tr>
+          <tr><td><b>Uplink</b></td><td><span class="tag">Mgmt / LAN</span></td><td><span class="ip">192.168.2.1</span></td><td class="mono">—</td><td class="mono">pfSense LAN</td><td>Router, switch mgmt, monitoring</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>Why the plan skips 192.168.10.0/24</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0 0 8px">The <b>E314n Compass antennas</b> ship with <span class="ip">192.168.10.1</span> as their factory gateway, and there are <b>200+ of them</b> deployed on the vendo AP masts.</p>
+        <ul class="clean warn">
+          <li>Any segment numbered <span class="ip">192.168.10.x</span> would collide the moment a unit is swapped in, reset, or arrives new from the box</li>
+          <li>That collision is silent and intermittent — the worst kind to trace at night</li>
+          <li>So <span class="tag">VLAN 110</span> → <span class="ip">192.168.110.0/24</span> takes the first slot instead</li>
+          <li>Everything else lines up on its own ID: 20, 30, 40, 50</li>
+        </ul>
+        <div class="note" style="margin-top:10px"><b>Rule worth stealing:</b> before you number a subnet, check the default gateway of the device you deploy most. Reserve that /24 and never use it.</div>
+      </div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/padlock.png" alt=""><h3>What gets a static address — <span class="mono">.2 – .99</span></h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0 0 8px">Anything you port-forward to, monitor, bill, or need to find at 2 a.m. must not move when a lease expires.</p>
+        <ul class="clean yes">
+          <li><b>LiteBeam AC Gen2 radios</b> — both ends of every P2P link</li>
+          <li><b>Unmanaged edge switches</b> and other infrastructure at the far end</li>
+          <li><b>High-revenue piso Wi-Fi vendos</b> — the units worth checking on directly</li>
+          <li><b>PISONET café PCs</b> — e.g. AP → Station → unmanaged switch on <span class="ip">192.168.20.0/24</span>, every machine statically addressed</li>
+        </ul>
+        <div class="note good" style="margin-top:10px"><b>Everything else</b> takes DHCP from <span class="mono">.100–.254</span>. Phones, laptops, walk-in clients — devices that come and go and never need to be reached from outside.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SITE 2 TOPOLOGY ═══════════ -->
+<section class="slide" data-title="Site 2 — topology">
+  <div class="wrap">
+    <span class="eyebrow">Site 2 · Budget Set</span>
+    <h2>Same chain, one box</h2>
+    <p class="sub">ISP → GL-AX1800 → wireless AP → Station → clients. A completely separate site with <b>its own PLDT line</b>, far from Site 1. Identical architecture; the GL-AX1800 simply does the routing <i>and</i> the VLAN switching in one ₱5,000 unit.</p>
+    <div class="card"><div class="diagram" data-diagram="siteB"></div>
+      <div class="flowkey">
+        <span class="dn"><i></i>Downlink — ISP → client</span>
+        <span class="up"><i></i>Uplink — client → ISP</span>
+        <span style="color:var(--dim)">Press <b>L</b> to cycle</span>
+      </div>
+    </div>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card tight"><div class="kpi acc">1</div><div class="lbl">Public IP · no CGNAT</div></div>
+      <div class="card tight"><div class="kpi acc">4</div><div class="lbl">Isolated VLANs</div></div>
+      <div class="card tight"><div class="kpi good">STP</div><div class="lbl">Loop protection on</div></div>
+      <div class="card tight"><div class="kpi acc">₱5,000</div><div class="lbl">Whole routing + switching tier</div></div>
+    </div>
+    <div class="note good"><b>Field result:</b> this site runs clean with no managed switch. It is the template for smaller deployments — homes, single offices, and remote sites where a rack is not realistic.</div>
+  </div>
+</section>
+
+<!-- ═══════════ SITE 2 PORT MAP ═══════════ -->
+<section class="slide" data-title="Site 2 — ports">
+  <div class="wrap">
+    <span class="eyebrow">Site 2 · Addressing</span>
+    <h2>GL-AX1800 port &amp; VLAN map</h2>
+    <div class="split">
+      <div class="card" style="padding:6px 10px">
+        <table>
+          <thead><tr><th>Port</th><th>VLAN</th><th>Gateway</th><th>DHCP</th><th>Serves</th></tr></thead>
+          <tbody>
+            <tr><td><b>WAN</b></td><td><span class="tag">SQM</span></td><td colspan="3">FQ-CoDel · UnCGNAT done · CPE in router mode</td></tr>
+            <tr><td><b>Port 1</b></td><td><span class="tag">VLAN 1</span></td><td><span class="ip">192.168.8.1</span></td><td class="mono">Admin</td><td>Admin + monitoring</td></tr>
+            <tr><td><b>Port 2</b></td><td><span class="tag">VLAN 20</span></td><td><span class="ip">192.168.20.1</span></td><td class="mono">.100 – .253</td><td>P2P link → group A</td></tr>
+            <tr><td><b>Port 3</b></td><td><span class="tag">VLAN 30</span></td><td><span class="ip">192.168.30.1</span></td><td class="mono">.100 – .253</td><td>P2P link → group B</td></tr>
+            <tr><td><b>Port 4</b></td><td><span class="tag">VLAN 40</span></td><td><span class="ip">192.168.40.1</span></td><td class="mono">.100 – .253</td><td>P2P link → group C</td></tr>
+            <tr><td><b>STP</b></td><td colspan="4"><span class="pill good">Enabled</span> — loop protection on every port</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="card"><div class="cardhead"><img class="icn mono" src="assets/gear.png" alt=""><h3>Open items</h3></div>
+          <ul class="clean warn">
+            <li><b>CPE left in router mode — settled</b> — bridging is the property owner’s call and they decline it, so one extra NAT hop stays. UnCGNAT still delivers the public IP, and the site runs clean at <b>4,549 connections</b> with load average <b>0.27</b></li>
+            <li><b>VLAN 1 → VLAN 110 migration</b> — moving admin off the default VLAN to <span class="ip">192.168.110.1</span> (.100–.253). Every unconfigured device lands on VLAN 1 by default; management should not live there</li>
+            <li><b>Same numbering rule as Site 1</b> — VLAN ID is the third octet, and <span class="ip">192.168.10.0/24</span> is left free at both sites for the E314n antennas' factory gateway</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:14px"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>One honest limitation</h3></div>
+          <p class="sub" style="font-size:13.2px;margin:0">Software SQM costs CPU. This box shapes comfortably in the low hundreds of Mbps; on a 600 Mbps plan it becomes the ceiling before the fiber does. That is a fair trade at ₱5,000 — 250 Mbps with an A-grade ping beats 600 Mbps that stutters. If a site must deliver the full plan speed <i>with</i> shaping, that is the pfSense tier.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SCALE ═══════════ -->
+<section class="slide" data-title="Scale">
+  <div class="wrap">
+    <span class="eyebrow">Reference sites</span>
+    <h2>What this actually runs</h2>
+    <p class="sub">Two production sites, one fiber line each, no load balancing. These are the numbers behind every claim in this deck.</p>
+    <div class="grid g4">
+      <div class="card tight"><div class="kpi acc">200+</div><div class="lbl">Devices visible in Omada · Site 1</div></div>
+      <div class="card tight"><div class="kpi acc">70+</div><div class="lbl">Piso Wi-Fi vendos · Site 1</div></div>
+      <div class="card tight"><div class="kpi acc">150</div><div class="lbl">Devices on one GL-AX1800 · Site 2</div></div>
+      <div class="card tight"><div class="kpi acc">8 km</div><div class="lbl">Longest point-to-point link</div></div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/layer-up.png" alt=""><h3>Site 1 · Full set</h3></div>
+        <ul class="clean">
+          <li><b>70+</b> piso Wi-Fi vendos</li>
+          <li><b>50+</b> subscriber connections</li>
+          <li><b>200+</b> devices in the Omada client list</li>
+          <li><b>~10 APs / 14 stations</b> across the point-to-point links</li>
+          <li>One 34-port unmanaged switch fanning out VLAN 50</li>
+          <li><b>171 clients on the switch, measured off-peak</b> — VLAN 50: <b>68</b> · VLAN 10: <b>41</b> · VLAN 30: <b>31</b> · VLAN 20: <b>20</b> · VLAN 40: <b>10</b>, all wired</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/lightning.png" alt=""><h3>Site 2 · Budget set</h3></div>
+        <ul class="clean">
+          <li><b>8</b> piso Wi-Fi vendos</li>
+          <li><b>30+</b> subscriber connections</li>
+          <li><b>150</b> devices on a single ₱5,000 router</li>
+          <li>Its own PLDT line — an entirely separate site, far from Site 1</li>
+          <li>Running clean with no managed switch</li>
+          <li><b>4,549 active connections of 14,336</b> — read off the box itself: <b>2,702</b> on VLAN 20, <b>945</b> on VLAN 40, <b>436</b> on VLAN 30, at load average <b>0.27</b></li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/info.png" alt=""><h3>The real total is higher</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0 0 8px">That 200+ counts only what the controller can see. It does not include:</p>
+        <ul class="clean">
+          <li>Phones and laptops connected <i>through</i> each vendo</li>
+          <li>Devices behind a subscriber’s own router</li>
+          <li>Sub-networks like <span class="ip">192.168.20.x</span>, where a router feeds a point-to-multipoint AP serving four more stations</li>
+        </ul>
+        <div class="note" style="margin-top:10px">Every one of those users shares the same shaped queue — which is exactly why FQ-CoDel is doing the work it is.</div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card artcard">
+        <img src="assets/art/tower.png" alt="Guyed steel mast with welded ladder rungs and point-to-point antennas at the top">
+        <div>
+          <h3>The mast</h3>
+          <p class="sub" style="font-size:13.2px;margin:0 0 8px">A single steel pole with rungs welded up the side, held by four levels of guy wires anchored in four directions. Somebody climbs it to mount and align the point-to-point radios at the top.</p>
+          <p class="sub" style="font-size:13.2px;margin:0">This is what carries the <b style="color:var(--accent)">8 km link</b> — and why a site visit is a real cost, and remote management is worth paying for.</p>
+        </div>
+      </div>
+      <div class="card artcard">
+        <img src="assets/art/pisowifi-hero.png" alt="Coin-operated Piso Wi-Fi vending machine">
+        <div>
+          <h3>The revenue unit</h3>
+          <p class="sub" style="font-size:13.2px;margin:0 0 8px">Insert a coin, connect, browse. <b>70+</b> of these at Site 1 and <b>8</b> at Site 2, each one an endpoint at the far side of a wireless hop.</p>
+          <p class="sub" style="font-size:13.2px;margin:0">Every pillar in this deck exists so that the person standing in front of one of these gets a connection that works at 8 pm.</p>
+        </div>
+      </div>
+    </div>
+    <div class="speaker"><b>Speaker note</b>Land the 8 km link and the 150 devices on one ₱5,000 box. Those two numbers do more convincing than any diagram in the deck. The mast picture is worth pausing on — it makes “site visit” mean something concrete.</div>
+  </div>
+</section>
+
+<!-- ═══════════ RACK BUILD · full ═══════════ -->
+<section class="slide rackslide" data-deck="full" data-core="pfsense" data-title="How it goes together">
+  <div class="wrap">
+    <span class="eyebrow">Site 1 · Assembly</span>
+    <h2>How the stack goes together</h2>
+    <p class="sub">Each device is wired, powered and brought online before the next one joins. Traffic only starts flowing on a segment once that segment is finished — which is exactly how you commission a site.</p>
+
+    <div class="rackswitch">
+      <button class="btn on" data-anim="0">Animation 1 · Wireless P2P build</button>
+      <button class="btn" data-anim="1">Animation 2 · Home / Office / Business</button>
+    </div>
+
+    <div class="card rackpanel on">
+      <div class="rackwrap" data-rack></div>
+      <div class="legend" style="margin-top:12px">
+        <span><i style="background:#4EA8FF"></i>WAN</span>
+        <span><i style="background:#A78BFA"></i>VLAN 10 / 110</span>
+        <span><i style="background:#34D399"></i>VLAN 20</span>
+        <span><i style="background:#FBBF24"></i>VLAN 30</span>
+        <span><i style="background:#F472B6"></i>VLAN 40</span>
+        <span><i style="background:#FF7A18"></i>Power</span>
+        <span style="color:var(--dim)">a segment only carries traffic once its cable is finished</span>
+        <div class="spacer"></div>
+        <button class="btn" data-replay style="height:28px">
+          <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg><span data-replay-label>Replay</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card rackpanel">
+      <div class="scenrow">
+        <span class="lbl" style="margin:0">Same box, four VLANs, indoors</span>
+        <div class="spacer"></div>
+        <button class="btn on" data-scen="home">Home</button>
+        <button class="btn" data-scen="office">Office</button>
+        <button class="btn" data-scen="business">Business</button>
+      </div>
+      <p class="sub" data-blurb style="font-size:13.4px;margin:10px 0 4px"></p>
+      <div class="rackwrap" data-rack></div>
+      <div class="legend" style="margin-top:12px">
+        <span><i style="background:#4EA8FF"></i>WAN</span>
+        <span><i style="background:#A78BFA"></i>VLAN 10 / 110</span>
+        <span><i style="background:#34D399"></i>VLAN 20</span>
+        <span><i style="background:#FBBF24"></i>VLAN 30</span>
+        <span><i style="background:#F472B6"></i>VLAN 40</span>
+        <span><i style="background:#FF7A18"></i>Power</span>
+        <span style="color:var(--dim)">a segment only carries traffic once its cable is finished</span>
+        <div class="spacer"></div>
+        <button class="btn" data-replay style="height:28px">
+          <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg><span data-replay-label>Replay</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card tight"><div class="kpi acc">1</div><div class="lbl">Modem → pfSense · one NAT boundary</div></div>
+      <div class="card tight"><div class="kpi acc">3</div><div class="lbl">PoE injectors → radios on the mast</div></div>
+      <div class="card tight"><div class="kpi acc">1</div><div class="lbl">Edge switch → one more client hop</div></div>
+      <div class="card tight"><div class="kpi good">2</div><div class="lbl">UPS · the stack rides through a cut</div></div></div>
+    <div class="note"><b>Why the PoE injectors are separate boxes:</b> the LiteBeam AC Gen2 runs on 24 V passive PoE, which 802.3af switch ports cannot supply. Each radio keeps its own injector — and each one is a part that can fail, which is why they are drawn rather than hidden.</div>
+    <div class="speaker"><b>Speaker note</b>Run Animation 1 without talking, then switch to Animation 2 and click through Home, Office, Business. The point that lands: it is the same three pillars every time — only the labels on the four ports change.</div>
+  </div>
+</section>
+
+<!-- ═══════════ RACK BUILD · budget ═══════════ -->
+<section class="slide rackslide" data-deck="budget" data-core="router" data-title="How it goes together">
+  <div class="wrap">
+    <span class="eyebrow">Site 2 · Assembly</span>
+    <h2>How the one-box stack goes together</h2>
+    <p class="sub">No rack, no managed switch. The GL-AX1800 does the routing and the VLAN switching itself, then hands each VLAN to its own radio. Traffic only flows on a segment once that segment is finished.</p>
+
+    <div class="rackswitch">
+      <button class="btn on" data-anim="0">Animation 1 · Wireless P2P build</button>
+      <button class="btn" data-anim="1">Animation 2 · Home / Office / Business</button>
+    </div>
+
+    <div class="card rackpanel on">
+      <div class="rackwrap" data-rack></div>
+      <div class="legend" style="margin-top:12px">
+        <span><i style="background:#4EA8FF"></i>WAN</span>
+        <span><i style="background:#A78BFA"></i>VLAN 10 / 110</span>
+        <span><i style="background:#34D399"></i>VLAN 20</span>
+        <span><i style="background:#FBBF24"></i>VLAN 30</span>
+        <span><i style="background:#F472B6"></i>VLAN 40</span>
+        <span><i style="background:#FF7A18"></i>Power</span>
+        <span style="color:var(--dim)">a segment only carries traffic once its cable is finished</span>
+        <div class="spacer"></div>
+        <button class="btn" data-replay style="height:28px">
+          <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg><span data-replay-label>Replay</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card rackpanel">
+      <div class="scenrow">
+        <span class="lbl" style="margin:0">Same box, four VLANs, indoors</span>
+        <div class="spacer"></div>
+        <button class="btn on" data-scen="home">Home</button>
+        <button class="btn" data-scen="office">Office</button>
+        <button class="btn" data-scen="business">Business</button>
+      </div>
+      <p class="sub" data-blurb style="font-size:13.4px;margin:10px 0 4px"></p>
+      <div class="rackwrap" data-rack></div>
+      <div class="legend" style="margin-top:12px">
+        <span><i style="background:#4EA8FF"></i>WAN</span>
+        <span><i style="background:#A78BFA"></i>VLAN 10 / 110</span>
+        <span><i style="background:#34D399"></i>VLAN 20</span>
+        <span><i style="background:#FBBF24"></i>VLAN 30</span>
+        <span><i style="background:#F472B6"></i>VLAN 40</span>
+        <span><i style="background:#FF7A18"></i>Power</span>
+        <span style="color:var(--dim)">a segment only carries traffic once its cable is finished</span>
+        <div class="spacer"></div>
+        <button class="btn" data-replay style="height:28px">
+          <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg><span data-replay-label>Replay</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card tight"><div class="kpi acc">1</div><div class="lbl">Modem → GL-AX1800 · one NAT boundary</div></div>
+      <div class="card tight"><div class="kpi acc">3</div><div class="lbl">PoE injectors → radios on the mast</div></div>
+      <div class="card tight"><div class="kpi acc">4</div><div class="lbl">VLANs from one ₱5,000 box</div></div>
+      <div class="card tight"><div class="kpi good">1</div><div class="lbl">UPS · rides through a cut</div></div></div>
+    <div class="note"><b>Same architecture, one box.</b> The GL-AX1800 is doing the routing, the VLAN tagging, the shaping and the firewall at once. Everything the full set does, up to the point where you outgrow four segments or need the whole plan speed with SQM on.</div>
+    <div class="speaker"><b>Speaker note</b>Run Animation 1 without talking, then switch to Animation 2 and click through Home, Office, Business. The point that lands: it is the same three pillars every time — only the labels on the four ports change.</div>
+  </div>
+</section>
+
+<!-- ═══════════ PILLARS ═══════════ -->
+<section class="slide" data-title="The pillars">
+  <div class="wrap">
+    <span class="eyebrow">The Thesis</span>
+    <h2>Four things doing the heavy lifting</h2>
+    <p class="sub">Remove any one of them and the network still “works” — it just becomes the network everybody else has.</p>
+    <div class="grid g4">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/encrypted.png" alt=""><h3>UnCGNAT</h3></div>
+        <p class="sub" style="font-size:13px;margin:0 0 10px">A real public IP instead of a shared carrier address.</p>
+        <span class="pill good">Inbound works</span>
+        <ul class="clean" style="margin-top:8px"><li>Port forwarding, DDNS, CCTV, VPN, remote console</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/defence.png" alt=""><h3>VLAN 802.1Q</h3></div>
+        <p class="sub" style="font-size:13px;margin:0 0 10px">Separate Layer-2 worlds on one physical switch.</p>
+        <span class="pill good">Blast radius = 1 group</span>
+        <ul class="clean" style="margin-top:8px"><li>Storms, rogue DHCP and infections stay in their lane</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/stopwatch.png" alt=""><h3>FQ-CoDel SQM</h3></div>
+        <p class="sub" style="font-size:13px;margin:0 0 10px">Fair queuing + active queue management on the WAN.</p>
+        <span class="pill good">Latency stays flat</span>
+        <ul class="clean" style="margin-top:8px"><li>One heavy downloader can no longer ruin everyone’s ping</li></ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/lightning.png" alt=""><h3>One clean WAN</h3></div>
+        <p class="sub" style="font-size:13px;margin:0 0 10px">One line, one public IP, one queue that FQ-CoDel owns.</p>
+        <span class="pill good">Sessions stay intact</span>
+        <ul class="clean" style="margin-top:8px"><li>The dual-WAN section explains why this matters more than it sounds</li></ul></div>
+    </div>
+    <div class="card" style="margin-top:14px"><div class="diagram" data-diagram="pillars"></div>
+      <div class="flowkey"><span class="dn"><i></i>Downlink</span><span class="up"><i></i>Uplink</span>
+        <span style="color:var(--dim)">FQ-CoDel shapes both directions — upload matters as much as download</span></div>
+    </div>
+    <div class="note"><b>The one-sentence pitch:</b> most networks are tuned for the speed-test number. This one is tuned for the ping <i>while</i> the speed test is running — which is what people actually experience all day.</div>
+  </div>
+</section>
+
+<!-- ═══════════ CGNAT ═══════════ -->
+<section class="slide" data-title="CGNAT">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 01</span>
+    <h2>CGNAT — the invisible wall</h2>
+    <p class="sub">IPv4 ran out. Carriers now put hundreds of customers behind one shared public address (<code>100.64.0.0/10</code>). Traffic can go <i>out</i>, but nothing from the internet can ever start a connection <i>in</i>.</p>
+    <div class="split">
+      <div class="card"><div class="cardhead"><span class="pill bad">Default · CGNAT ON</span></div>
+        <div class="diagram" data-diagram="cgnatOn"></div></div>
+      <div class="card"><div class="cardhead"><span class="pill good">This build · UnCGNAT</span></div>
+        <div class="diagram" data-diagram="cgnatOff"></div></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/cross.png" alt=""><h3>Behind CGNAT you lose</h3></div>
+        <ul class="clean no">
+          <li><b>Port forwarding</b> — dead. There is no port to forward from</li>
+          <li><b>CCTV / NVR remote viewing</b> — only via a third-party relay cloud</li>
+          <li><b>DDNS</b> — resolves to the carrier’s shared IP, not to you</li>
+          <li><b>Self-hosted VPN back to site</b> — no inbound listener possible</li>
+          <li><b>Game hosting &amp; NAT type</b> — Strict / Type 3, P2P matchmaking suffers</li>
+          <li><b>Remote router console</b> — you must drive to the site</li>
+          <li><b>Shared-IP reputation</b> — someone else’s abuse gets you CAPTCHA’d or blocked</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/check.png" alt=""><h3>With UnCGNAT you get back</h3></div>
+        <ul class="clean yes">
+          <li><b>A routable public IP</b> terminating on <i>your</i> router</li>
+          <li><b>Inbound services</b> — NVR, VPN, web, remote desktop, game host</li>
+          <li><b>Clean NAT traversal</b> — Open/Moderate NAT, working UPnP, fewer relayed calls</li>
+          <li><b>Real remote management</b> — fix a site from your phone at 2 a.m.</li>
+          <li><b>Fewer NAT layers</b> = fewer broken protocols, lower per-packet overhead</li>
+          <li><b>Costs ₱0</b> — it is a request to the ISP, not hardware</li>
+        </ul></div>
+    </div>
+    <div class="speaker"><b>Speaker note</b>Framing that always lands: “CGNAT is a condominium with one front desk and no unit numbers. Mail goes out fine. Nothing can ever be delivered to you.”</div>
+  </div>
+</section>
+
+<!-- ═══════════ VLAN ═══════════ -->
+<section class="slide" data-title="VLAN vs flat">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 02</span>
+    <h2>What happens without VLANs</h2>
+    <p class="sub">Replace the managed switch with a dumb one and every device — every tenant, every guest, every vendo, the admin PC — lands in <b>one flat broadcast domain</b>. Everyone hears everyone.</p>
+    <div class="split">
+      <div class="card"><div class="cardhead"><span class="pill bad">Flat /24 · unmanaged</span></div>
+        <div class="diagram" data-diagram="flat"></div></div>
+      <div class="card"><div class="cardhead"><span class="pill good">Segmented · 802.1Q</span></div>
+        <div class="diagram" data-diagram="vlan"></div></div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>Failure modes of a flat network</h3></div>
+        <ul class="clean no">
+          <li><b>Rogue DHCP</b> — one mis-set device hands out wrong gateways to the entire site</li>
+          <li><b>Broadcast / ARP storms</b> — chatty devices burn airtime on every link at once</li>
+          <li><b>Lateral movement</b> — one infected machine can scan and reach all others</li>
+          <li><b>MAC table pressure</b> — cheap switches flood when the table overflows</li>
+          <li><b>No blame isolation</b> — “who is flooding?” has no fast answer</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/padlock.png" alt=""><h3>What VLANs buy</h3></div>
+        <ul class="clean yes">
+          <li><b>Contained blast radius</b> — a storm dies inside its own /24</li>
+          <li><b>Privacy</b> — group A literally cannot see group B’s devices</li>
+          <li><b>Per-group policy</b> — separate firewall rules, bandwidth caps, captive portals</li>
+          <li><b>Per-group accounting</b> — usage per tenant, for billing or disputes</li>
+          <li><b>Surgical troubleshooting</b> — scoped to one tag, not the whole site</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/layer-up.png" alt=""><h3>Plus STP</h3></div>
+        <ul class="clean yes">
+          <li>Spanning Tree is <b>enabled on both sites</b></li>
+          <li>Someone patches a cable back into the same switch → the loop is blocked, not amplified</li>
+          <li>On a flat unmanaged network that same mistake takes down everything, instantly</li>
+        </ul>
+        <div class="note bad" style="margin-top:10px"><b>Cost of one loop</b> on an unmanaged site: total outage until someone physically finds the cable. STP costs nothing — it is a checkbox on hardware you already own.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ANTI-LOOPBACK ═══════════ -->
+<section class="slide" data-title="Anti-loopback">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 02 · The field reality</span>
+    <h2>Anti-loopback — the feature that pays for the box</h2>
+    <p class="sub">Clients are not network engineers, and on a mountain site they should not have to be. The question is never <i>whether</i> someone plugs the wrong thing into the wrong port — it is what happens to everyone else when they do.</p>
+    <div class="split">
+      <div class="card"><div class="cardhead"><span class="pill bad">Typical setup · nothing guarding the switch</span></div>
+        <div class="diagram" data-diagram="loopBad"></div></div>
+      <div class="card"><div class="cardhead"><span class="pill good">This build · STP + VLAN + DHCP authority</span></div>
+        <div class="diagram" data-diagram="loopGood"></div></div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/fire.png" alt=""><h3>Real incidents — all of them survivable now</h3></div>
+        <ul class="clean no">
+          <li><b>Client factory-resets their router</b> — DHCP switches back on and it starts handing out <span class="ip">192.168.1.1</span> to everyone</li>
+          <li><b>WAN cable moved into a LAN port</b> — instant loop</li>
+          <li><b>A modem plugged in as a “router”</b> — the client cannot tell them apart, and now there are two DHCP servers</li>
+          <li><b>Client adds their own router</b>, unconfigured, gateway clashing with the main network</li>
+          <li><b>Lightning or a power surge</b> resets a LiteBeam, an AP or a vendo back to factory defaults</li>
+          <li><b>An ISP modem running as an AP</b> — DHCP switched off by hand — resets itself and becomes a router again</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/defence.png" alt=""><h3>What each mechanism actually stops</h3></div>
+        <ul class="clean yes">
+          <li><b>STP</b> — catches the physical loop and blocks that port, typically within a second. This is the “anti-loopback” doing the heavy lifting</li>
+          <li><b>VLAN</b> — a rogue DHCP server can only poison its own segment, never the whole site</li>
+          <li><b>Router-owned DHCP</b> — the correct server sits upstream and stays authoritative for every VLAN</li>
+          <li><b>Distinct gateway</b> — <span class="ip">192.168.2.1</span> and <span class="ip">192.168.8.1</span> never collide with a factory-default device</li>
+          <li><b>Remote console</b> — you can see <i>which</i> port went down without driving there</li>
+        </ul>
+        <div class="note" style="margin-top:10px">Worth being precise: STP handles loops, VLANs contain rogue DHCP. Two features, two problems — you want both.</div>
+      </div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/crown.png" alt=""><h3>Standard practice on these sites</h3></div>
+        <ul class="clean">
+          <li>Spare ISP modems are repurposed as <b>plain APs</b> with DHCP off, or as dumb switches — never as a second router</li>
+          <li>They still reset themselves after a surge, which is exactly why the upstream protection has to exist</li>
+          <li>STP enabled on <b>every port at both sites</b>, not only the uplinks</li>
+          <li>Every segment on its own VLAN, so the blast radius is one group</li>
+        </ul>
+        <div class="note good" style="margin-top:10px"><b>Field verdict:</b> the same mistakes that used to take a whole site down now take down one port. That, more than throughput, is what the pfSense and GL-AX1800 tiers are really buying.</div>
+        <div class="note" style="margin-top:10px"><b>Still on the table:</b> the T1500G-10PS also ships with <b>Storm Control</b>, <b>DHCP Snooping</b> and <b>IP-MAC-Port Binding</b>. None of them are switched on yet. Enabling them would stop a broadcast storm and a rogue DHCP server at the port itself, before STP even has to act — no new hardware, just configuration.</div>
+      </div>
+    </div>
+    <div class="speaker"><b>Speaker note</b>This slide closes deals with anyone who has actually run a site. Ask them: “how many times has your whole network gone down because one customer touched something?” Then show the right-hand diagram.</div>
+  </div>
+</section>
+
+<!-- ═══════════ FQ-CODEL ═══════════ -->
+<section class="slide" data-title="FQ-CoDel">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 03</span>
+    <h2>FQ-CoDel — why the ping stays low</h2>
+    <p class="sub">Bufferbloat is why a 600 Mbps line can still “feel laggy”. Routers ship with oversized dumb buffers: when the link fills, packets are not dropped — they are <i>stored</i>. Your game packet queues behind half a second of somebody’s download.</p>
+    <div class="grid g3">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/info.png" alt=""><h3>FQ — Fair Queuing</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0">Traffic is hashed into ~1024 independent flow queues and served round-robin. A single 40-connection torrent no longer outvotes a one-connection voice call. <b>New / sparse flows get served first</b> — which is exactly what interactive traffic is.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/stopwatch.png" alt=""><h3>CoDel — Controlled Delay</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0">Measures how long each packet <i>sat</i> in the queue. If the minimum stays above <code>target 5 ms</code> for <code>interval 100 ms</code>, it starts dropping or ECN-marking. TCP reads that as “slow down”, and the queue drains itself.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/lightning.png" alt=""><h3>SQM — own the bottleneck</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0">Shape at roughly <b>85–95 % of measured line rate</b> so the queue forms inside your router where FQ-CoDel controls it — instead of inside the ISP modem where you have zero control. Trade a slice of peak throughput for a 10–40× latency improvement.</p></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="cardhead"><img class="icn mono" src="assets/gear.png" alt=""><h3>Configuration on a 600 Mbps line</h3></div>
+      <div class="grid g4">
+        <div><div class="kpi acc">fq_codel</div><div class="lbl">Queue discipline</div></div>
+        <div><div class="kpi acc">600 Mbps</div><div class="lbl">Provisioned line rate</div></div>
+        <div><div class="kpi acc">~540 Mbps</div><div class="lbl">Shaped rate (90 %)</div></div>
+        <div><div class="kpi acc">5 / 100 ms</div><div class="lbl">CoDel target / interval</div></div>
+      </div>
+      <div class="note"><b>Important:</b> FQ-CoDel does not make the line faster. It makes the line <i>fair and predictable</i> while it is full. The speed-test number drops by roughly 10 % — latency under load drops by an order of magnitude. Set the shaped rate from a measured off-peak speed test, not from the plan’s marketing number.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ LIVE SIM ═══════════ -->
+<section class="slide" data-title="Live simulator">
+  <div class="wrap">
+    <span class="eyebrow">Live Demo</span>
+    <h2>Same load. Same line. Different queue.</h2>
+    <p class="sub">Both lanes receive identical traffic: one <b style="color:var(--accent-2)">bulk download</b> saturating the link, plus one <b style="color:var(--accent)">interactive flow</b> (game / voice / Zoom). Watch what the queue does to the interactive packets.</p>
+    <div class="simwrap">
+      <div class="simcard on-bad">
+        <div class="cardhead" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:9px"><img class="icn mono" src="assets/cross.png" alt=""><h3>Without FQ-CoDel — single FIFO buffer</h3></div>
+          <span class="pill bad">Bufferbloat</span>
+        </div>
+        <canvas id="simFifo"></canvas>
+        <div class="readout">
+          <div><div class="v" id="fifoLat" style="color:var(--bad)">— ms</div><div class="k">Interactive latency</div></div>
+          <div><div class="v" id="fifoQ" style="color:var(--bad)">0</div><div class="k">Packets queued</div></div>
+          <div><div class="v" id="fifoJit" style="color:var(--bad)">— ms</div><div class="k">Jitter</div></div>
+        </div>
+        <ul class="clean no" style="margin-top:8px">
+          <li>One queue, first-in-first-out, huge buffer</li>
+          <li>Interactive packets wait behind the entire download</li>
+          <li>Call stutters, game rubber-bands, page loads crawl</li>
+        </ul>
+      </div>
+      <div class="simcard on-good">
+        <div class="cardhead" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:9px"><img class="icn mono" src="assets/check.png" alt=""><h3>With FQ-CoDel — per-flow queues + AQM</h3></div>
+          <span class="pill good">Controlled</span>
+        </div>
+        <canvas id="simFq"></canvas>
+        <div class="readout">
+          <div><div class="v" id="fqLat" style="color:var(--good)">— ms</div><div class="k">Interactive latency</div></div>
+          <div><div class="v" id="fqQ" style="color:var(--good)">0</div><div class="k">Packets queued</div></div>
+          <div><div class="v" id="fqJit" style="color:var(--good)">— ms</div><div class="k">Jitter</div></div>
+        </div>
+        <ul class="clean yes" style="margin-top:8px">
+          <li>Separate queue per flow, sparse flow served first</li>
+          <li>CoDel drops from the bulk queue to keep delay near target</li>
+          <li>Download still runs at full speed — it just waits its turn</li>
+        </ul>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--accent-2)"></i>Bulk download packet</span>
+      <span><i style="background:var(--accent)"></i>Interactive packet (game / voice)</span>
+      <span><i style="background:var(--bad)"></i>Dropped by AQM (this is a feature)</span>
+      <div class="spacer"></div>
+      <button class="btn" id="simToggle" style="height:28px"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg><span id="simToggleLabel">Pause</span></button>
+      <button class="btn" id="simBurst" style="height:28px"><img class="icn tint" style="width:13px;height:13px" src="assets/fire.png" alt="">Add heavy load</button>
+    </div>
+    <div class="speaker"><b>Speaker note</b>Let it run ten seconds before you say anything — the two latency numbers do the selling. Then hit “Add heavy load”: the FIFO buffer pins at 100 % and starts tail-dropping, while the FQ-CoDel side barely moves. The red X marks are CoDel dropping <i>on purpose</i>, early, to keep the queue short.</div>
+  </div>
+</section>
+
+<!-- ═══════════ FLOW PATH ═══════════ -->
+<section class="slide" data-title="Where the queue forms">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 03 · Path</span>
+    <h2>Where the queue actually forms</h2>
+    <p class="sub">Same physical path. The only difference is <i>which device holds the packets</i> when the link is full — and whether that device is smart about it.</p>
+    <div class="split">
+      <div class="card"><div class="cardhead"><span class="pill bad">Without SQM</span></div>
+        <div class="diagram" data-diagram="flowBad"></div>
+        <div class="note bad" style="margin-top:10px">The queue forms in the <b>ISP modem</b>, in a buffer you cannot see, configure or drain. Every packet — game, voice, DNS — waits in the same line behind the download.</div></div>
+      <div class="card"><div class="cardhead"><span class="pill good">With FQ-CoDel SQM</span></div>
+        <div class="diagram" data-diagram="flowGood"></div>
+        <div class="note good" style="margin-top:10px">Shaping ~10 % below line rate pulls the bottleneck <b>into your router</b>. FQ-CoDel sorts flows and keeps sojourn time near 5 ms, so interactive traffic passes the download instead of queuing behind it.</div></div>
+    </div>
+    <div class="card" style="margin-top:14px;padding:6px 10px">
+      <table>
+        <thead><tr><th>Scenario · link fully saturated</th><th>Idle ping</th><th>Ping under load</th><th>Jitter</th><th>Voice / game / meet</th><th>Bufferbloat grade</th></tr></thead>
+        <tbody>
+          <tr><td><b>Dumb FIFO — typical ISP router</b></td><td class="mono">18 ms</td><td class="mono" style="color:var(--bad)">300 – 1,500 ms</td><td class="mono" style="color:var(--bad)">high</td><td>Unusable while anyone downloads</td><td><span class="pill bad">D / F</span></td></tr>
+          <tr><td><b>Basic rate limit, no AQM</b></td><td class="mono">18 ms</td><td class="mono" style="color:var(--warn)">120 – 400 ms</td><td class="mono" style="color:var(--warn)">medium</td><td>Noticeably degraded</td><td><span class="pill warn">C</span></td></tr>
+          <tr><td><b>FQ-CoDel SQM — this build</b></td><td class="mono">18 ms</td><td class="mono" style="color:var(--good)">20 – 40 ms</td><td class="mono" style="color:var(--good)">low</td><td>No perceptible change</td><td><span class="pill good">A / A+</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/check.png" alt=""><h3>Measured — off-peak</h3></div>
+        <div class="kpi good">A+</div><div class="lbl">Both sites · waveform.com bufferbloat test</div></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/stopwatch.png" alt=""><h3>Measured — peak, 6 pm – 10 pm</h3></div>
+        <div class="kpi good">A / B+</div><div class="lbl">Both sites · the busiest four hours of the day</div></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/crown.png" alt=""><h3>User-visible problems</h3></div>
+        <div class="kpi good">0</div><div class="lbl">At either grade — nobody notices the difference</div></div>
+    </div>
+    <p class="sub" style="font-size:12.4px;color:var(--dim);margin-top:10px">The table’s ranges are typical published results for FQ-CoDel on shaped consumer links. The three figures above are the real results from Site 1 and Site 2. A grade easing from A+ to B+ at peak is the shaper working harder on a busier line — still an order of magnitude better than the D or F an unshaped connection returns, and no user reports a difference.</p>
+  </div>
+</section>
+
+<!-- ═══════════ DUAL WAN — THE TRAP ═══════════ -->
+<section class="slide" data-title="Dual WAN — the trap">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 04 · Learned the hard way</span>
+    <h2>Two ISPs into one router — why it went wrong</h2>
+    <p class="sub">This was tested in production on a live site: two lines into one router, load balanced. The speed test looked incredible. Everything else got worse.</p>
+    <div class="split">
+      <div class="card"><div class="cardhead"><span class="pill bad">Load balancing · per-connection</span></div>
+        <div class="diagram" data-diagram="dualWanLB"></div>
+      </div>
+      <div>
+        <div class="card"><div class="cardhead"><img class="icn mono" src="assets/fire.png" alt=""><h3>What actually happened</h3></div>
+          <ul class="clean no">
+            <li><b>Banking and e-wallet apps refused to work</b> — GCash and similar would not open, or logged out mid-transaction</li>
+            <li><b>“Turn off your VPN”</b> warnings on sites nobody was VPN-ing into</li>
+            <li><b>Frequent timeouts</b>, and some sites simply unreachable</li>
+            <li><b>Sudden disconnects</b> in the middle of a page or a session</li>
+            <li><b>Games lagging and dropping</b> — the exact thing the network was built to prevent</li>
+            <li>Daily complaints from clients and from the coin-operated units</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:14px"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>The speed-test illusion</h3></div>
+          <p class="sub" style="font-size:13.2px;margin:0 0 8px">The test showed <b style="color:var(--accent)">800–900 Mbps</b>. That number is real and completely useless: modern speed tests open many parallel connections, and the balancer spread them across both lines — so the tool simply <i>added the two lines together</i>.</p>
+          <p class="sub" style="font-size:13.2px;margin:0"><b style="color:var(--text)">A single download, a single video stream, a single game never exceeds one line’s speed.</b> Two 600 Mbps lines do not make a 1.2 Gbps connection — they make two 600 Mbps connections that a speed test can add up and a human never can.</p>
+        </div>
+      </div>
+    </div>
+    <div class="speaker"><b>Speaker note</b>Own this one out loud: “I did this myself because I thought two lines meant more speed. The speed test agreed with me. The clients did not.” Admitting the mistake is what makes the rest of the deck credible.</div>
+  </div>
+</section>
+
+<!-- ═══════════ DUAL WAN — WHY ═══════════ -->
+<section class="slide" data-title="Dual WAN — why it breaks">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 04 · Root cause</span>
+    <h2>Why load balancing breaks the modern web</h2>
+    <p class="sub">Every symptom on the previous slide traces to one fact: <b>your public IP changed in the middle of a session.</b></p>
+    <div class="grid g3">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/padlock.png" alt=""><h3>Sessions are bound to an IP</h3></div>
+        <ul class="clean no">
+          <li>You log in and the server issues a session token tied to <span class="mono">IP&nbsp;A</span></li>
+          <li>Your next click leaves via the other WAN as <span class="mono">IP&nbsp;B</span></li>
+          <li>The server sees the same token from a different address and treats it as <b>session hijacking</b> — logout, re-auth, or a hard block</li>
+          <li>Banks and e-wallets are the strictest about this by design. That is why they broke first</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>Anti-fraud reads it as a VPN</h3></div>
+        <ul class="clean no">
+          <li>Rapid IP hopping is the exact fingerprint of a proxy or VPN</li>
+          <li>Fraud and bot-detection systems respond with CAPTCHAs, blocks, or the <b>“please turn off your VPN”</b> notice</li>
+          <li>Two <i>different</i> carriers is worse — different networks, sometimes different geolocation, so the site sees you jump city mid-session</li>
+          <li>CDNs and streaming services apply the same logic</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/lightning.png" alt=""><h3>Long-lived flows get cut</h3></div>
+        <ul class="clean no">
+          <li>Games hold a UDP flow open for the whole match; move it to another WAN and the NAT mapping changes → <b>disconnect or rubber-band</b></li>
+          <li>Voice and video calls behave the same way</li>
+          <li>TLS session resumption fails, so pages re-handshake and feel slow</li>
+          <li>Large downloads stall or restart</li>
+        </ul></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/stopwatch.png" alt=""><h3>It also breaks FQ-CoDel</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0">SQM works by <b>owning the single bottleneck</b>. Split traffic across two WANs and neither queue is authoritative — the shaper can no longer tell how full the real path is. The latency control you paid for degrades exactly when the network is busy. Add CGNAT on either line and it compounds.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/info.png" alt=""><h3>Would PLDT + Globe or PLDT + Converge behave differently?</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0"><b style="color:var(--text)">No — expect the same or worse.</b> The problem is the balancing method, not the carrier. Mixing two different networks means two different address blocks and often two different apparent locations, which makes the IP-hopping fingerprint <i>more</i> obvious to anti-fraud systems, not less.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ DUAL WAN — DONE RIGHT ═══════════ -->
+<section class="slide" data-title="Dual WAN — done right">
+  <div class="wrap">
+    <span class="eyebrow">Pillar 04 · The fix</span>
+    <h2>If you really need a second line</h2>
+    <p class="sub">A second WAN is not forbidden — <i>splitting one user’s traffic across both</i> is. Pick one of these instead.</p>
+    <div class="split">
+      <div class="card"><div class="cardhead"><span class="pill good">Option 1 — Failover only · recommended</span></div>
+        <div class="diagram" data-diagram="dualWanFail"></div>
+        <ul class="clean yes" style="margin-top:8px">
+          <li>One line carries everything; the second sits idle until the first dies</li>
+          <li>Every session keeps <b>one stable public IP</b> — banking, games and logins behave normally</li>
+          <li>FQ-CoDel still owns exactly one queue, so latency control is intact</li>
+          <li>Sessions only break during an actual outage — which is the point of redundancy</li>
+        </ul>
+      </div>
+      <div class="card"><div class="cardhead"><span class="pill good">Option 2 — Pin groups per WAN</span></div>
+        <div class="diagram" data-diagram="dualWanPin"></div>
+        <ul class="clean yes" style="margin-top:8px">
+          <li>Policy routing: VLAN 20/30 always exit ISP A, VLAN 40/50 always exit ISP B</li>
+          <li>Each client keeps <b>one consistent public IP</b> — no mid-session hopping</li>
+          <li>The site really does use both lines, so total capacity doubles</li>
+          <li>Shape each WAN with its own FQ-CoDel instance — both queues stay authoritative</li>
+        </ul>
+      </div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/crown.png" alt=""><h3>Option 3 — one bigger plan</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0">Usually the cheapest answer once you count the second line’s monthly fee <i>plus</i> the support hours the complaints generate. One fat, clean, shaped line beats two split ones for almost every workload.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>If you must load balance</h3></div>
+        <ul class="clean warn">
+          <li>Turn on <b>sticky / source-IP persistence</b> so one client stays on one WAN</li>
+          <li>Exclude banking, auth and game destinations from balancing entirely</li>
+          <li>Expect it to reduce, not eliminate, the problem</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/check.png" alt=""><h3>Rule of thumb</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0"><b style="color:var(--text)">One user’s session must always leave through the same door.</b> Redundancy at the site level is good. Redundancy inside a single conversation is what breaks the internet for that user.</p></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/fire.png" alt=""><h3>What the market actually does</h3></div>
+        <p class="sub" style="font-size:13.2px;margin:0 0 8px">Operators nearby run <b>three, sometimes five ISP lines</b> into one router and call it “combined”. A single ₱1,899 line looks like an underspend next to that, and it gets treated that way.</p>
+        <ul class="clean warn">
+          <li>The speed test on those setups genuinely reads higher — that is the number being sold</li>
+          <li>But on survey visits, <b>their own users describe the same failures</b> listed two slides back: apps that will not open, sessions dropping, games unplayable</li>
+          <li>More lines multiply the IP-hopping problem instead of solving it</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/crown.png" alt=""><h3>Why one line still wins</h3></div>
+        <ul class="clean yes">
+          <li><b>One public IP</b> — every session leaves through the same door, so nothing breaks mid-transaction</li>
+          <li><b>One bottleneck</b> — FQ-CoDel can actually own it, which is where the A+ grade comes from</li>
+          <li><b>One bill</b> — ₱1,899 a month against three or five</li>
+          <li><b>Fewer support calls</b> — the failures on the left simply do not happen here</li>
+        </ul>
+        <div class="note good" style="margin-top:10px">The right question is not “how many lines do you have”. It is <b>“what is your ping while the line is full”</b> — and that is a question a five-ISP setup cannot answer well.</div>
+      </div>
+    </div>
+    <div class="note good"><b>Current status:</b> both reference sites run a <b>single clean WAN</b>, UnCGNAT, with FQ-CoDel owning the one queue. The dual-WAN experiment was rolled back and the complaints stopped.</div>
+  </div>
+</section>
+
+<!-- ═══════════ TYPICAL SETUP ═══════════ -->
+<section class="slide" data-title="Typical setup">
+  <div class="wrap">
+    <span class="eyebrow">The Alternative</span>
+    <h2>What the usual setup looks like</h2>
+    <p class="sub">No pfSense. No GL-AX1800. No managed switch. Just routers plugged into routers — the most common build in the field, and the one every complaint comes from.</p>
+    <div class="card"><div class="diagram" data-diagram="typical"></div>
+      <div class="flowkey"><span class="dn"><i></i>Downlink</span><span class="up"><i></i>Uplink</span>
+        <span style="color:var(--dim)">Every numbered badge is another NAT rewriting the packet on both trips</span></div>
+    </div>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card tight"><div class="kpi bad">3–4×</div><div class="lbl">Stacked NAT layers</div></div>
+      <div class="card tight"><div class="kpi bad">1</div><div class="lbl">Flat broadcast domain</div></div>
+      <div class="card tight"><div class="kpi bad">0</div><div class="lbl">AQM / shaping</div></div>
+      <div class="card tight"><div class="kpi bad">0</div><div class="lbl">Inbound reachability</div></div>
+    </div>
+    <div class="card" style="margin-top:14px;padding:6px 10px">
+      <div class="cardhead" style="padding:8px 4px 0"><img class="icn mono" src="assets/info.png" alt=""><h3>Default gateways — why these builds collide</h3></div>
+      <table>
+        <thead><tr><th>Device</th><th>Default gateway out of the box</th><th>What that causes</th></tr></thead>
+        <tbody>
+          <tr><td><b>PLDT modem</b></td><td><span class="ip">192.168.1.1</span></td><td>The address every other box has to stay away from</td></tr>
+          <tr><td><b>Most consumer routers</b></td><td><span class="ip">192.168.0.1</span></td><td>Usually survivable — a second private network behind the first</td></tr>
+          <tr><td><b>Some routers (e.g. Mercusys)</b></td><td><span class="ip">192.168.1.1</span></td><td><span class="pill bad">Direct clash</span> with the PLDT modem</td></tr>
+          <tr><td><b>E314n Compass antenna</b></td><td><span class="ip">192.168.10.1</span></td><td>Why <span class="ip">192.168.10.0/24</span> is reserved and never used as a segment</td></tr>
+          <tr><td><b>GL.iNet GL-AX1800</b></td><td><span class="ip">192.168.8.1</span></td><td>Off on its own — collides with nothing above</td></tr>
+          <tr><td><b>pfSense, as configured here</b></td><td><span class="ip">192.168.2.1</span></td><td>Deliberately chosen to sit clear of every factory default</td></tr>
+        </tbody>
+      </table>
+      <div class="note bad" style="margin-top:6px"><b>Not theoretical.</b> Put a Mercusys router behind a PLDT modem and both answer to <span class="ip">192.168.1.1</span>. Whichever replies to ARP first wins; the other simply vanishes. The client reports “no internet”, and nothing in that report hints at an address clash.</div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>Why this chain hurts</h3></div>
+        <ul class="clean no">
+          <li><b>CGNAT + NAT + NAT + NAT</b> — every layer rewrites headers, breaks NAT traversal and adds a state table that can fill up</li>
+          <li><b>No FQ-CoDel anywhere</b> — no box in the chain can shape, so the queue lands in the ISP modem</li>
+          <li><b>Unmanaged switch</b> — no VLANs, no STP, no port isolation, one loop kills the site</li>
+          <li><b>Double DHCP</b> — overlapping <code>192.168.1.0/24</code> on both sides of the link</li>
+          <li><b>No remote access</b> — every fix is a site visit</li>
+          <li><b>No visibility</b> — nobody can prove whose traffic caused the outage</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/fire.png" alt=""><h3>What the end user reports</h3></div>
+        <ul class="clean no">
+          <li>“Speed test is 600 Mbps but the game lags”</li>
+          <li>“Zoom keeps freezing when someone downloads”</li>
+          <li>“The Wi-Fi hangs at peak hours”</li>
+          <li>“CCTV app cannot connect from outside”</li>
+          <li>“It fixes itself if I reboot” — that is the NAT state table clearing</li>
+        </ul>
+        <div class="note bad" style="margin-top:10px">All five are symptoms of the <b>same missing pillars</b>. They are architecture problems, not bandwidth problems — which is why upgrading the plan never fixes them.</div>
+      </div>
+    </div>
+    <div class="speaker"><b>Speaker note</b>This is the slide where the listener recognises their own network. Don’t rush it. Let them say “that’s exactly our setup” out loud.</div>
+  </div>
+</section>
+
+<!-- ═══════════ HEAD TO HEAD ═══════════ -->
+<section class="slide" data-title="Head to head">
+  <div class="wrap">
+    <span class="eyebrow">Head to Head</span>
+    <h2>Typical build vs this build</h2>
+    <div class="card" style="padding:6px 10px">
+      <table>
+        <thead><tr><th>Capability</th><th>Typical setup</th><th>This build</th><th>Who feels it</th></tr></thead>
+        <tbody>
+          <tr><td><b>Public IP</b></td><td><span class="pill bad">CGNAT · shared</span></td><td><span class="pill good">UnCGNAT · routable</span></td><td>Anyone needing remote access</td></tr>
+          <tr><td><b>NAT layers</b></td><td class="mono" style="color:var(--bad)">3 – 4</td><td class="mono" style="color:var(--good)">1</td><td>Gamers, VoIP, P2P apps</td></tr>
+          <tr><td><b>Segmentation</b></td><td><span class="pill bad">Flat /24</span></td><td><span class="pill good">802.1Q VLANs</span></td><td>Every tenant / group</td></tr>
+          <tr><td><b>Loop protection</b></td><td><span class="pill bad">None</span></td><td><span class="pill good">STP enabled</span></td><td>Whole-site uptime</td></tr>
+          <tr><td><b>Queue management</b></td><td><span class="pill bad">Dumb FIFO</span></td><td><span class="pill good">FQ-CoDel + SQM</span></td><td>Everyone, all day</td></tr>
+          <tr><td><b>Latency under load</b></td><td class="mono" style="color:var(--bad)">300 – 1,500 ms</td><td class="mono" style="color:var(--good)">20 – 40 ms</td><td>Games, calls, meetings</td></tr>
+          <tr><td><b>WAN design</b></td><td><span class="pill bad">Load-balanced / random IP</span></td><td><span class="pill good">One clean WAN, stable IP</span></td><td>Banking apps, logins, games</td></tr>
+          <tr><td><b>Remote management</b></td><td><span class="pill bad">Site visit required</span></td><td><span class="pill good">Web console / GoodCloud</span></td><td>Downtime cost</td></tr>
+          <tr><td><b>Fault isolation</b></td><td><span class="pill bad">Whole network</span></td><td><span class="pill good">One VLAN</span></td><td>SLA / reputation</td></tr>
+          <tr><td><b>Per-group accounting</b></td><td><span class="pill bad">Not possible</span></td><td><span class="pill good">Per-VLAN stats</span></td><td>Billing &amp; disputes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ COST ═══════════ -->
+<section class="slide" data-title="Cost — PHP">
+  <div class="wrap">
+    <span class="eyebrow">Money</span>
+    <h2>What the architecture costs — PHP</h2>
+    <p class="sub">Only the routing and switching tier is priced here. That is the part that determines whether you get UnCGNAT, VLANs and FQ-CoDel at all.</p>
+    <div class="grid g3">
+
+      <div class="card">
+        <div class="cardhead"><span class="pill good">Budget set</span></div>
+        <table><tbody>
+          <tr><td>GL.iNet GL-AX1800</td><td class="num"><span class="price">₱5,000</span></td></tr>
+          <tr><td>Managed switch</td><td class="num" style="color:var(--dim)">not needed</td></tr>
+          <tr><td>UnCGNAT request</td><td class="num"><span class="price">₱0</span></td></tr>
+          <tr><td>FQ-CoDel · VLAN · STP</td><td class="num"><span class="price">₱0</span> built in</td></tr>
+        </tbody></table>
+        <div class="bomtot"><span class="t">One-time</span><span class="v">₱5,000</span></div>
+        <ul class="clean yes" style="margin-top:6px"><li>Router + 4 VLAN ports + SQM + STP + remote management, one box</li></ul>
+      </div>
+
+      <div class="card">
+        <div class="cardhead"><span class="pill acc">Full set</span></div>
+        <table><tbody>
+          <tr><td>pfSense box</td><td class="num"><span class="price">₱10,000</span></td></tr>
+          <tr><td>TP-Link JetStream T1500G-10PS</td><td class="num"><span class="price">₱11,000</span></td></tr>
+          <tr><td>UnCGNAT request</td><td class="num"><span class="price">₱0</span></td></tr>
+          <tr><td>FQ-CoDel · VLAN · STP</td><td class="num"><span class="price">₱0</span> built in</td></tr>
+        </tbody></table>
+        <div class="bomtot"><span class="t">One-time</span><span class="v">₱21,000</span></div>
+        <ul class="clean yes" style="margin-top:6px"><li>Dedicated firewall/router + dedicated managed switch</li></ul>
+      </div>
+
+      <div class="card">
+        <div class="cardhead"><span class="pill" style="color:var(--accent-2);border-color:var(--accent-2)">Recurring &amp; optional</span></div>
+        <table><tbody>
+          <tr><td>PLDT Fibr Plan 1899 · 600 Mbps</td><td class="num"><span class="price mo">₱1,899 / mo</span></td></tr>
+          <tr><td>Piso Wi-Fi vendo + E314n antenna</td><td class="num"><span class="price">₱10,000</span></td></tr>
+          <tr><td colspan="2" style="color:var(--dim)">the vendo applies only to coin-operated deployments — revenue equipment, not infrastructure</td></tr>
+        </tbody></table>
+        <div class="bomtot"><span class="t">Difference between tiers</span><span class="v">₱16,000</span></div>
+        <ul class="clean" style="margin-top:6px"><li>Next slide: what that ₱16,000 buys, and when it is not worth it</li></ul>
+      </div>
+
+    </div>
+    <div class="note"><b>Deliberately not priced:</b> the wireless P2P bridges (any AP/Station pair — the reference sites use Ubiquiti LiteBeam AC Gen2, but the design does not depend on it), client-side routers and access points, cabling, masts, PoE, UPS and labour. Those vary per site and would make the comparison meaningless.</div>
+  </div>
+</section>
+
+<!-- ═══════════ WHICH TIER ═══════════ -->
+<section class="slide" data-title="Which tier">
+  <div class="wrap">
+    <span class="eyebrow">Money</span>
+    <h2>What the ₱16,000 difference buys</h2>
+    <div class="card" style="padding:6px 10px">
+      <table>
+        <thead><tr><th>&nbsp;</th><th>Budget set — ₱5,000</th><th>Full set — ₱21,000</th></tr></thead>
+        <tbody>
+          <tr><td><b>VLAN-capable ports</b></td><td><span class="pill warn">4 LAN ports</span> — the one real limit</td><td><span class="pill good">8 gigabit + 2 SFP</span> — 6 in use, room to grow</td></tr>
+          <tr><td><b>Wi-Fi in the box</b></td><td><span class="pill good">Built in</span> — dual-band AX1800, and you can administer it over its own Wi-Fi</td><td><span class="pill bad">None</span> — pfSense has no radio; budget a separate access point</td></tr>
+          <tr><td><b>Running out of ports</b></td><td>Hang an <b>unmanaged switch</b> off a LAN port — cheap, but everything behind it sits in that <i>one</i> VLAN. A <b>managed</b> switch brings the tagged ports back</td><td>Add ports on the managed switch — each one can carry any VLAN you like</td></tr>
+          <tr><td><b>Shaped throughput</b></td><td class="mono" style="color:var(--warn)">comfortable at this site’s real load — the SQM ceiling is CPU-bound; set it from a speed test</td><td class="mono" style="color:var(--good)">full plan speed with SQM on, plus headroom above it</td></tr>
+          <tr><td><b>Firewall</b></td><td>Solid basics</td><td>Full rule sets, aliases, schedules, IDS/IPS capable</td></tr>
+          <tr><td><b>VPN</b></td><td>Light WireGuard use</td><td>Site-to-site, many peers, always on</td></tr>
+          <tr><td><b>If a box dies</b></td><td><span class="pill warn">One box = everything</span> — it takes routing, switching <i>and</i> Wi-Fi with it</td><td><span class="pill good">Router and switch fail separately</span> — one failure is half an outage</td></tr>
+          <tr><td><b>Visibility</b></td><td>GoodCloud basics</td><td>Per-interface graphs, state tables, full logs</td></tr>
+          <tr><td><b>Scaling</b></td><td>Fine to ~4 segments — what runs out is <b>ports and VLANs</b>, not client capacity</td><td>Add VLANs freely; cost per segment keeps dropping</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/check.png" alt=""><h3>Budget set is the right answer when…</h3></div>
+        <ul class="clean yes">
+          <li>Four segments or fewer — a home, a small office, a single remote site</li>
+          <li>The site needs Wi-Fi from the router itself — no separate access point in the budget</li>
+          <li>No complex firewall policy, no site-to-site VPN</li>
+          <li>Space, power or budget rules out a separate router, switch and access point</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/crown.png" alt=""><h3>Full set earns its price when…</h3></div>
+        <ul class="clean yes">
+          <li>More than four groups, or you expect to add more</li>
+          <li>You need the full plan speed <i>with</i> shaping enabled</li>
+          <li>Multiple tenants with genuinely different policies</li>
+          <li>You want IDS, VPN concentration, deep logs and graphs</li>
+          <li>Router and switch failing independently actually matters</li>
+        </ul></div>
+    </div>
+    <div class="note"><b>Honest summary:</b> the ₱5,000 box delivers <i>all the pillars</i>, at close to the same shaped speed, and it brings its own Wi-Fi — which matters, because bridge mode switches the PLDT box’s Wi-Fi off and pfSense has no radio. Its one genuine limit is four LAN ports. The ₱21,000 tier adds ports, isolation and room to grow — not capabilities you cannot live without.</div>
+    <div class="speaker"><b>Speaker note</b>If someone asks why the cheap box wins so many rows: it does, and say so. The full set is bought for ports, PoE and independent failure — not for speed. Resist upselling here. Saying “₱5,000 is enough for your office” is what makes the ₱21,000 recommendation believable on the site that genuinely needs it.</div>
+  </div>
+</section>
+
+<!-- ═══════════ IMPACT ═══════════ -->
+<section class="slide" data-title="Impact per site type">
+  <div class="wrap">
+    <span class="eyebrow">Business Value</span>
+    <h2>What each pillar means, per environment</h2>
+    <div class="grid g4">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/layer-up.png" alt=""><h3>Office / building</h3></div>
+        <ul class="clean yes">
+          <li><b>VLAN</b> — guest Wi-Fi cannot reach the office LAN or the POS</li>
+          <li><b>FQ-CoDel</b> — client calls survive the nightly backup</li>
+          <li><b>UnCGNAT</b> — NVR and remote desktop reachable without a relay subscription</li>
+          <li><b>Result</b> — fewer “the internet is slow” tickets</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/lightning.png" alt=""><h3>Home / family</h3></div>
+        <ul class="clean yes">
+          <li><b>FQ-CoDel</b> — ping stays flat while someone else downloads</li>
+          <li><b>UnCGNAT</b> — Open/Moderate NAT, party chat and hosting work</li>
+          <li><b>VLAN</b> — smart devices isolated from personal machines</li>
+          <li><b>Result</b> — no rubber-banding at peak hours</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/defence.png" alt=""><h3>Remote / mountain ops</h3></div>
+        <ul class="clean yes">
+          <li><b>UnCGNAT</b> — remote console instead of a trip up the mountain</li>
+          <li><b>VLAN + STP</b> — a mistake takes down one segment, not the site</li>
+          <li><b>FQ-CoDel</b> — usable comms on a link that is already tight</li>
+          <li><b>Result</b> — most incidents resolved without travelling</li>
+        </ul></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/badge.png" alt=""><h3>Small ISP / piso Wi-Fi</h3></div>
+        <ul class="clean yes">
+          <li><b>VLAN</b> — one unit’s fault never freezes the others</li>
+          <li><b>FQ-CoDel</b> — one downloader cannot starve everyone else</li>
+          <li><b>UnCGNAT</b> — dashboards and counts checked remotely</li>
+          <li><b>Result</b> — fewer refunds and lag complaints</li>
+        </ul></div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/stopwatch.png" alt=""><h3>Time saved</h3></div><p class="sub" style="font-size:13.2px;margin:0">Remote management turns most “drive to the site” incidents into a five-minute login. On remote sites this is the single largest operating cost the design removes.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/defence.png" alt=""><h3>Risk reduced</h3></div><p class="sub" style="font-size:13.2px;margin:0">Segmentation plus STP means the worst realistic failure is one VLAN down — not the whole site while someone hunts for a looped cable.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/crown.png" alt=""><h3>Reputation earned</h3></div><p class="sub" style="font-size:13.2px;margin:0">People do not measure Mbps. They measure whether the video call froze. FQ-CoDel is what they are actually paying for, even if they never learn the word.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SECURITY ═══════════ -->
+<section class="slide" data-title="Security & management">
+  <div class="wrap">
+    <span class="eyebrow">Operations</span>
+    <h2>Security posture &amp; remote management</h2>
+    <div class="grid g2">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/padlock.png" alt=""><h3>Controls in place</h3></div>
+        <ul class="clean yes">
+          <li><b>L2 isolation</b> — VLAN per group; client groups cannot reach each other</li>
+          <li><b>L3 firewall</b> — inter-VLAN traffic passes only where a rule allows it</li>
+          <li><b>Management on its own subnet</b> — <span class="ip">192.168.2.0/24</span>, separate from every customer segment</li>
+          <li><b>Authenticated console</b> — the router’s web interface requires a username and password; nothing is reachable without credentials</li>
+          <li><b>STP</b> — loop and rogue-bridge protection on both sites</li>
+          <li><b>DHCP authority</b> — served by the router; rogue servers stay contained to one VLAN</li>
+          <li><b>Single NAT boundary</b> — one clean state table, easier to audit</li>
+        </ul>
+        <div class="note" style="margin-top:10px"><b>Deliberate: a second admin can reach the console.</b> Management is reachable from the client VLANs on purpose — a second person helps run these sites and needs to open <span class="ip">192.168.2.1</span> from wherever they happen to be. The console is <b>password-protected</b>; this is a considered trade-off, not an oversight.</div>
+        <div class="note warn" style="margin-top:10px"><b>Worth narrowing, though.</b> Today the door is open to every device on every client segment so that <i>one</i> person can walk through it. Two ways to keep the access and lose the exposure, neither of which slows that person down:
+          <ul class="clean warn" style="margin-top:8px">
+            <li><b>Pin it to one address</b> — the admin device already takes a static IP from the <span class="mono">.2–.99</span> range. Allow that source to <span class="ip">192.168.2.1</span>, deny the rest. Ten minutes, and nothing changes for them.</li>
+            <li><b>WireGuard peer</b> — better still: admin access from <i>anywhere</i>, not just on-site, and the login page becomes invisible to customers entirely. Fixes get done from home instead of from a truck.</li>
+          </ul>
+        </div>
+        <div class="note" style="margin-top:10px"><b>Rest of the hardening backlog — all of it already supported by the T1500G-10PS:</b> DHCP Snooping, IP-MAC-Port Binding (TP-Link’s ARP-inspection equivalent), Storm Control, Port Security for per-port MAC limits on public segments. Plus off-box config backups and a written register of the static <span class="mono">.2–.99</span> assignments. No purchase needed — this is an afternoon in the switch UI.</div>
+      </div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/gear.png" alt=""><h3>How the network is operated</h3></div>
+        <ul class="clean">
+          <li><b>Full set</b> — pfSense console over the public IP (UnCGNAT is what makes this possible), with per-interface traffic graphs and state tables</li>
+          <li><b>Budget set</b> — GL.iNet GoodCloud for remote config, reboot, client list and uptime alerts</li>
+          <li><b>Radios</b> — signal, CCQ and airtime checked per link</li>
+          <li><b>Change discipline</b> — config exported before every change; the VLAN map is the source of truth</li>
+        </ul>
+        <div class="note good" style="margin-top:10px"><b>Practical meaning:</b> an outage report at 11 p.m. gets triaged from a phone, and most of the time is resolved without anybody leaving the house.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ VERIFY ═══════════ -->
+<section class="slide" data-title="How to verify">
+  <div class="wrap">
+    <span class="eyebrow">Proof</span>
+    <h2>Don’t take my word for it — measure it</h2>
+    <p class="sub">Every claim in this deck is testable in under five minutes, on your own connection, in front of you.</p>
+    <div class="grid g3">
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/stopwatch.png" alt=""><h3>1 · Bufferbloat grade</h3></div>
+        <p class="sub" style="font-size:13.2px">Run <code>waveform.com/tools/bufferbloat</code> before and after SQM. The letter grade is the whole story.</p>
+        <span class="pill bad">Before: C – F</span> <span class="pill good">After: A / A+</span>
+        <p class="sub" style="font-size:12.6px;margin:8px 0 0">Both reference sites measure <b style="color:var(--good)">A+ off-peak</b> and <b style="color:var(--good)">A / B+ during 6–10 pm</b>.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/lightning.png" alt=""><h3>2 · Ping under load</h3></div>
+        <p class="sub" style="font-size:13.2px">Hold a ping open, then start a saturating download and watch the same window.</p>
+        <div class="card tight mono" style="font-size:12px;background:var(--panel-2)">ping -t 1.1.1.1<br><span style="color:var(--dim)"># start a big download, watch the numbers</span></div></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/encrypted.png" alt=""><h3>3 · Real public IP</h3></div>
+        <p class="sub" style="font-size:13.2px">If the WAN address starts with <code>100.64–100.127</code>, you are behind CGNAT. Compare the router’s WAN IP against <code>whatismyip</code>.</p>
+        <span class="pill bad">100.x = CGNAT</span> <span class="pill good">Match = clean</span></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/defence.png" alt=""><h3>4 · VLAN isolation</h3></div>
+        <p class="sub" style="font-size:13.2px">From a client on VLAN 20, try to ping a device on VLAN 30. Correct answer: request timed out.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/check.png" alt=""><h3>5 · Inbound reachability</h3></div>
+        <p class="sub" style="font-size:13.2px">Forward a port, then test it from mobile data — not from inside the LAN. Confirms UnCGNAT end to end.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/warning.png" alt=""><h3>6 · Stable public IP</h3></div>
+        <p class="sub" style="font-size:13.2px">Reload <code>whatismyip</code> ten times in a row. The address must not change. If it flips, something is load balancing your traffic — see the dual-WAN section.</p></div>
+      <div class="card"><div class="cardhead"><img class="icn mono" src="assets/layer-up.png" alt=""><h3>7 · Is the shaper actually on?</h3></div>
+        <p class="sub" style="font-size:13.2px">Two lines on the router itself — the queue discipline, and how loaded the box really is.</p>
+        <div class="card tight mono" style="font-size:12px;background:var(--panel-2)">tc qdisc show | grep codel<br>cat /proc/sys/net/netfilter/nf_conntrack_count</div>
+        <p class="sub" style="font-size:12.6px;margin:8px 0 0">Site 2 answers <b style="color:var(--good)">fq_codel, target 5 ms</b> and <b style="color:var(--good)">4,549 / 14,336</b>.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ROADMAP (FULL) ═══════════ -->
+<section class="slide" data-deck="full" data-title="Roadmap">
+  <div class="wrap">
+    <span class="eyebrow">Next</span>
+    <h2>Roadmap</h2>
+    <div class="split">
+      <div class="card">
+        <div class="tl">
+          <div class="step"><h3><span class="pill good">Done</span> &nbsp;UnCGNAT — both sites</h3><p>Public IP terminating on my own routers. Inbound services and remote management unlocked.</p></div>
+          <div class="step"><h3><span class="pill good">Done</span> &nbsp;FQ-CoDel SQM — both sites</h3><p>Bottleneck moved into pfSense / GL-AX1800; latency under load is controlled.</p></div>
+          <div class="step"><h3><span class="pill good">Done</span> &nbsp;VLAN segmentation</h3><p>5 VLANs on Site 1 via JetStream, 4 on Site 2 via GL-AX1800. STP enabled on both.</p></div>
+          <div class="step"><h3><span class="pill good">Done</span> &nbsp;Dual-WAN rollback</h3><p>Load balancing removed; both sites back to a single clean WAN. Complaints stopped.</p></div>
+          <div class="step"><h3><span class="pill acc">Settled</span> &nbsp;Site 2 CPE stays routed</h3><p>Bridge mode is the property owner’s decision and they decline it. UnCGNAT already delivers the public IP; the extra hop has produced no user-visible problem at this site.</p></div>
+          <div class="step"><h3><span class="pill warn">Next up</span> &nbsp;Narrow management access</h3><p>A second admin needs <span class="ip">192.168.2.1</span> from the client side, so the access stays — but it should reach one static address or a WireGuard peer, not every device on every customer VLAN. Same convenience, far smaller surface.</p></div>
+          <div class="step"><h3><span class="pill warn">Planned</span> &nbsp;Admin VLAN migration</h3><p>Site 2 admin off VLAN 1 → <span class="ip">VLAN 110 / 192.168.110.0/24</span>.</p></div>
+          <div class="step"><h3><span class="pill acc">Proposed</span> &nbsp;Written static-address register</h3><p>The <span class="mono">.2–.99</span> assignments are recorded on and off. A single sheet turns a two-hour hunt into a thirty-second lookup.</p></div>
+          <div class="step"><h3><span class="pill good">Done</span> &nbsp;VLAN ↔ subnet realignment (Site 1)</h3><p>VLAN ID now matches the third octet: 20/30/40/50, with VLAN 110 taking the first slot so 192.168.10.0/24 stays free for the E314n antennas.</p></div>
+        </div>
+      </div>
+      <div>
+        <div class="card"><div class="cardhead"><img class="icn mono" src="assets/layer-up.png" alt=""><h3>Further upgrades worth costing</h3></div>
+          <ul class="clean">
+            <li><b>Site 2 — a managed switch</b> — four LAN ports is the one real limit there. Tagged ports come back <i>without</i> replacing the router, and far cheaper than moving the site to the full set</li>
+            <li><b>Monitoring</b> — LibreNMS / Zabbix or Uptime Kuma for per-VLAN and per-radio graphs; catch degradation before the client calls</li>
+            <li><b>Central syslog</b> — one place to answer “what happened at 9:14 pm”</li>
+            <li><b>Config backup automation</b> — router and switch configs exported on a schedule</li>
+            <li><b>WireGuard</b> — management plane over VPN instead of exposed web UIs</li>
+            <li><b>Failover WAN</b> — a second line in <i>failover</i> mode on revenue-critical sites, never load balanced</li>
+            <li><b>PPPoE / RADIUS</b> — per-subscriber auth and accounting if this scales further</li>
+            <li><b>DHCP snooping + ARP inspection</b> — kill rogue DHCP at the switch port</li>
+            <li><b>IPv6</b> — sidesteps IPv4 scarcity entirely where the ISP supports it</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ GLOSSARY ═══════════ -->
+<section class="slide" data-title="Glossary">
+  <div class="wrap">
+    <span class="eyebrow">Reference</span>
+    <h2>Glossary — plain language</h2>
+    <div class="grid g2">
+      <div class="card" style="padding:6px 10px"><table><tbody>
+        <tr><td><b>CGNAT</b></td><td>Carrier-Grade NAT. Many customers share one public IP. Outbound works, inbound is impossible.</td></tr>
+        <tr><td><b>UnCGNAT</b></td><td>Having the ISP move you off that shared pool onto a real routable public IP.</td></tr>
+        <tr><td><b>Bridge mode</b></td><td>The ISP box stops routing and passes the connection through, so your router is the only router.</td></tr>
+        <tr><td><b>NAT</b></td><td>Translating private addresses to a public one. Useful once. Stacked three deep it breaks things.</td></tr>
+        <tr><td><b>VLAN / 802.1Q</b></td><td>Virtual LAN. One physical switch behaving as several separate switches.</td></tr>
+        <tr><td><b>Tagged trunk</b></td><td>One cable carrying several VLANs, each packet labelled with its VLAN number.</td></tr>
+        <tr><td><b>Broadcast domain</b></td><td>The set of devices that hear each other’s broadcasts. Smaller is healthier.</td></tr>
+        <tr><td><b>STP</b></td><td>Spanning Tree Protocol. Detects and blocks accidental cable loops before they melt the network.</td></tr>
+        <tr><td><b>Unmanaged switch</b></td><td>A dumb port multiplier. Adds sockets, but everything behind it lands in one VLAN — it cannot tag.</td></tr>
+      </tbody></table></div>
+      <div class="card" style="padding:6px 10px"><table><tbody>
+        <tr><td><b>Bufferbloat</b></td><td>Oversized buffers holding packets instead of dropping them — the main cause of lag on a “fast” line.</td></tr>
+        <tr><td><b>AQM</b></td><td>Active Queue Management. Dropping a little, early, on purpose, to keep delay low.</td></tr>
+        <tr><td><b>FQ-CoDel</b></td><td>Fair Queuing + Controlled Delay. Per-flow fairness plus a 5 ms delay target.</td></tr>
+        <tr><td><b>SQM</b></td><td>Smart Queue Management. Shaping just below line rate so the smart queue is the bottleneck.</td></tr>
+        <tr><td><b>Load balancing</b></td><td>Splitting traffic across two WANs per connection. Looks fast on a speed test, breaks sessions.</td></tr>
+        <tr><td><b>Failover</b></td><td>One WAN active, one standby. Safe, because your public IP does not change mid-session.</td></tr>
+        <tr><td><b>Uplink / downlink</b></td><td>Traffic going to the ISP / coming from it. The two animated dash colours on every diagram.</td></tr>
+        <tr><td><b>P2P link</b></td><td>Point-to-point wireless bridge — a directional cable made of radio.</td></tr>
+        <tr><td><b>PoE</b></td><td>Power over Ethernet. One cable carries the data and the power, so the camera or AP at the far end needs no adapter.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SOURCE DIAGRAM (FULL) ═══════════ -->
+<section class="slide" data-deck="full" data-title="Source diagram">
+  <div class="wrap">
+    <span class="eyebrow">Appendix</span>
+    <h2>Original working diagram</h2>
+    <p class="sub">The hand-drawn source this deck was built from — including the VLAN 50 edge detail: two 8-port unmanaged switches feeding the downstream units and end clients.</p>
+    <div class="card" style="display:flex;justify-content:center">
+      <img src="assets/original-topology.png" alt="Original network topology diagram" style="max-width:100%;border-radius:12px;border:1px solid var(--stroke)">
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SUMMARY ═══════════ -->
+<section class="slide" data-title="Summary">
+  <div class="wrap">
+    <span class="eyebrow">Summary</span>
+    <h2>Four decisions. Everything else follows.</h2>
+    <div class="grid g4">
+      <div class="card"><div class="kpi acc">01</div><h3 style="margin-top:10px">Get off CGNAT</h3>
+        <p class="sub" style="font-size:13.2px;margin:0">Turns the connection from one-way into two-way. Unlocks remote management, CCTV, VPN and clean NAT. <b>₱0</b> — it is a request to the ISP.</p></div>
+      <div class="card"><div class="kpi acc">02</div><h3 style="margin-top:10px">Segment with VLANs</h3>
+        <p class="sub" style="font-size:13.2px;margin:0">Shrinks the blast radius from “whole site” to “one group”, and makes per-group policy possible. <b>₱5,000 – ₱21,000</b> depending on tier.</p></div>
+      <div class="card"><div class="kpi acc">03</div><h3 style="margin-top:10px">Own the queue</h3>
+        <p class="sub" style="font-size:13.2px;margin:0">FQ-CoDel + SQM turns a line that is fast on paper into one that stays responsive while fully loaded. <b>₱0</b> — it ships with the router.</p></div>
+      <div class="card"><div class="kpi acc">04</div><h3 style="margin-top:10px">Keep one clean WAN</h3>
+        <p class="sub" style="font-size:13.2px;margin:0">One stable public IP per user session. Redundancy belongs in failover, never inside a single conversation. <b>₱0</b> — it is a config decision.</p></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="cardhead"><img class="icn tint" src="assets/network-icon.png" alt=""><h3>The takeaway</h3></div>
+      <p class="sub" style="margin:0;font-size:15px">Bandwidth is what you buy. <b style="color:var(--text)">Latency, isolation, reachability and session stability are what you engineer.</b> Three of the four cost nothing but knowing to do them.</p>
+    </div>
+    <div class="cover-badges" style="margin-top:18px">
+      <span class="pill good">UnCGNAT · live</span>
+      <span class="pill good">VLANs · live</span>
+      <span class="pill good">FQ-CoDel SQM · live</span>
+      <span class="pill good">STP · live</span>
+      <span class="pill good">Single clean WAN · restored</span>
+      <span class="pill acc">Site 2 CPE · routed by choice</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CLOSING ═══════════ -->
+<section class="slide" data-title="Thank you">
+  <div class="wrap" style="min-height:calc(100vh - 150px);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+    <img src="assets/network-icon.png" alt="" style="width:74px;margin-bottom:22px">
+    <h1 style="max-width:20ch">Questions?</h1>
+    <p class="sub" style="text-align:center;max-width:64ch">Happy to walk through any layer in detail — the addressing plan, the SQM configuration, the VLAN map, the dual-WAN post-mortem, or how this scales to your sites.</p>
+    <div class="cover-badges" style="justify-content:center">
+      <span class="pill acc">pfSense</span><span class="pill acc">TP-Link JetStream</span><span class="pill acc">GL.iNet GL-AX1800</span>
+      <span class="pill acc">FQ-CoDel</span><span class="pill acc">802.1Q</span><span class="pill acc">UnCGNAT</span>
+    </div>
+    <p class="sub" style="text-align:center;font-size:12.4px;color:var(--dim);margin-top:26px">Switch tiers any time in the top bar · press <b style="color:var(--muted)">P</b> to export the current deck as a PDF handout</p>
+  </div>
+</section>
+
+</main>
+
+<script src="deck.js?v=4"></script>
+</body>
+</html>
